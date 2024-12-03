@@ -1,0 +1,14 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+### generic ignored files ###
+*.pyc
+.pytest_cache
+build
+dist
+__pycache__
+_build
+### VS Code ###
+.vscode
+### scraped images ###
+/downloaded_photos
