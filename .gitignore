@@ -11,4 +11,4 @@ _build
 ### VS Code ###
 .vscode
 ### scraped images ###
-/downloaded_photos
+/out
