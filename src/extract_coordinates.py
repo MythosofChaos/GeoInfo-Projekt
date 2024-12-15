@@ -2,11 +2,13 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import box
 import os
+from pathlib import Path
 #import folium
 #https://pypi.org/project/flickrapi/
 #https://geopandas.org/en/stable/getting_started/install.html
-
-shapefile_path = os.path.join(os.getcwd(), "in", "1976-2000.shp")
+project_dir = Path(__file__).parent.parent
+print(project_dir)
+shapefile_path = os.path.join(project_dir, "in", "1976-2000.shp")
 shapefile = gpd.read_file(shapefile_path)
 
 print(f"Current CRS: {shapefile.crs}") # current Coordinate Reference System
