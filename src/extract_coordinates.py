@@ -6,8 +6,8 @@ from pathlib import Path
 #import folium
 #https://pypi.org/project/flickrapi/
 #https://geopandas.org/en/stable/getting_started/install.html
+
 project_dir = Path(__file__).parent.parent
-print(project_dir)
 shapefile_path = os.path.join(project_dir, "in", "1976-2000.shp")
 shapefile = gpd.read_file(shapefile_path)
 
@@ -15,10 +15,13 @@ print(f"Current CRS: {shapefile.crs}") # current Coordinate Reference System
 
 # re-project to Web Mercator to convert lat/long -> degrees
 if shapefile.crs.is_geographic: # is.geographic checks if coodinates are in lat/long
-    projected_shapefile = shapefile.to_crs(epsg=3857)  # 3857 = Web Mercator
+    projected_shapefile = shapefile.to_crs({'proj':'cea'})  # 3857 = Web Mercator
 else:
-    projected_shapefile = shapefile 
-print(max(shapefile['geometry'].area / 10 ** 6))
+    print("shapefile is already projected --> projected_shapefile = shapefile")
+    projected_shapefile = shapefile
+
+print(projected_shapefile.crs)
+print("area: " + str(max(projected_shapefile['geometry'].area / 10 ** 6)) + " km²")
 """
 # filter for specific climate types
 filtered_df = projected_shapefile[projected_shapefile['climate'].isin(["BWh Arid-Desert-Hot", "BWk Arid-Desert-Cold"])]
