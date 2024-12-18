@@ -10,6 +10,11 @@ __pycache__
 _build
 ### VS Code ###
 .vscode
+*.env
+.env
+*.csv
+*.html
+*.json
 ### scraped images ###
 /out
 /in
