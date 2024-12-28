@@ -1,3 +1,5 @@
+
+
 import flickrapi
 import json
 import requests
@@ -22,8 +24,8 @@ if not api_key or not secret_key:
     raise ValueError("API key and secret key must be set")
 
 # hardcoded limit to the number of downloadable photos
-DOWNLOAD_LIMIT = 3200 #max 3600 per hour
-DOWNLOAD_LIMIT_BOUNDING_BOX = 47 #equal distribution among bounding boxes
+DOWNLOAD_LIMIT = 68000 #max 3600 per hour
+DOWNLOAD_LIMIT_BOUNDING_BOX = 68000 #equal distribution among bounding boxes
 download_count = 0
 download_count_bounding_box = 0
 
@@ -57,68 +59,72 @@ flickr_api = flickrapi.FlickrAPI(api_key, secret_key, format='parsed-json')
 # iterate over each bounding box
 for bounding_box in bounding_boxes:
     download_count_bounding_box = 0
-    time.sleep(1)
+    time.sleep(2)
     # search for the photos with specific tags inside the bounding box
     #search_result = flickr_api.photos.search(tags='desert pavement', per_page=60, extras='url_c,owner_name,geo', bbox=bounding_box)
-    search_result = flickr_api.photos.search(text='desert pavement', per_page=60, extras='url_c,owner_name,geo', bbox=bounding_box) #- for 
-    photos_list = search_result['photos']['photo']  # extract the list of photo metadata dictionaries for further processing
+    for current_page in range (1, 9):
+        search_result = flickr_api.photos.search(text='desert pavement', page=current_page, per_page=500, extras='url_c,owner_name,geo') #- for
+        photos_list = search_result['photos']['photo']  # extract the list of photo metadata dictionaries for further processing
 
-    if PRINT_DEBUG_INFO:
-        print(f"Number of photos found in bounding box {bounding_box}: {len(photos_list)}")  # Debugging: print number of photos found inside bounding box
-
-    # iterate through the list of photos: save metadata to a JSON file -> download images
-    for photo in photos_list:
-        if download_count_bounding_box >= DOWNLOAD_LIMIT_BOUNDING_BOX:
-            break
-        # check for duplicates 
-        if photo['id'] in image_names:
-            if PRINT_DEBUG_INFO:
-                print(f"Skipping duplicate photo: {photo['id']}")
-            continue
-        
-        # check if the photo is geotagged
-        if 'latitude' not in photo or 'longitude' not in photo or photo['latitude'] == 0 or photo['longitude'] == 0:
-            if PRINT_DEBUG_INFO:
-                print(f"Skipping non-geotagged photo: {photo['id']}")
-            continue
-
-        # save photo metadata to a JSON file
         if PRINT_DEBUG_INFO:
-            print(f"Processing photo: {photo['id']}")  # Debugging: check for photo metadata
-        with open(f"{project_dir}/out/data.json", 'a', encoding='utf-8') as json_file:  # 'a' = append mode
-            json.dump(photo, json_file, indent=4)
-            json_file.write('\n')
+            print(f"Number of photos found in bounding box {bounding_box}: {len(photos_list)}")  # Debugging: print number of photos found inside bounding box
 
-        # == code for downloading images ==
-
-        # Resizes the image to 800px on the longest side
-        if 'url_c' in photo:  
-            image_url = photo['url_c']
-            # debugging: print image URL
-            if PRINT_DEBUG_INFO:
-                print(f"Downloading image: {image_url}")  
-            # == download the image ==
-            image_response = requests.get(image_url)  
-            if image_response.status_code == 200:
-                #  -- save the image as a jpg --
-                with open(f"{project_dir}/out/downloaded_photos/{photo['id']}.jpg", 'wb') as image_file:  
-                    image_file.write(image_response.content)
-                download_count += 1
-                download_count_bounding_box += 1
-            else:
-                #debugging: check for failed downloads
+        # iterate through the list of photos: save metadata to a JSON file -> download images
+        for photo in photos_list:
+            if download_count_bounding_box >= DOWNLOAD_LIMIT_BOUNDING_BOX:
+                break
+            # check for duplicates
+            if photo['id'] in image_names:
                 if PRINT_DEBUG_INFO:
-                    print(f"Failed to download image: {image_url}")  
-        else:
-            # debugging: print if 'url_c' tag is missing // not available for all photos
+                    print(f"Skipping duplicate photo: {photo['id']}")
+                continue
+
+            # check if the photo is geotagged
+            if 'latitude' not in photo or 'longitude' not in photo or photo['latitude'] == 0 or photo['longitude'] == 0:
+                if PRINT_DEBUG_INFO:
+                    print(f"Skipping non-geotagged photo: {photo['id']}")
+                continue
+
+            # save photo metadata to a JSON file
             if PRINT_DEBUG_INFO:
-                print("No 'url_c' field in photo metadata")  
+                print(f"Processing photo: {photo['id']}")  # Debugging: check for photo metadata
+            with open(f"{project_dir}/out/data.json", 'a', encoding='utf-8') as json_file:  # 'a' = append mode
+                json.dump(photo, json_file, indent=4)
+                json_file.write('\n')
 
-        # avoid rate limiting
-        time.sleep(0.5)
+            # == code for downloading images ==
 
-    if PRINT_DEBUG_INFO:
-        print(f"Number of photos downloaded: {download_count}")  # debugging: print download count
+            # Resizes the image to 800px on the longest side
+            if 'url_c' in photo:
+                image_url = photo['url_c']
+                # debugging: print image URL
+                if PRINT_DEBUG_INFO:
+                    print(f"Downloading image: {image_url}")
+                # == download the image ==
+                image_response = requests.get(image_url)
+                if image_response.status_code == 200:
+                    #  -- save the image as a jpg --
+                    with open(f"{project_dir}/out/downloaded_photos/{photo['id']}.jpg", 'wb') as image_file:
+                        image_file.write(image_response.content)
+                    download_count += 1
+                    download_count_bounding_box += 1
+                else:
+                    #debugging: check for failed downloads
+                    if PRINT_DEBUG_INFO:
+                        print(f"Failed to download image: {image_url}")
+            else:
+                # debugging: print if 'url_c' tag is missing // not available for all photos
+                if PRINT_DEBUG_INFO:
+                    print("No 'url_c' field in photo metadata")
+
+            # avoid rate limiting
+
+            time.sleep(1)
+
+        if PRINT_DEBUG_INFO:
+            print(f"Number of photos downloaded: {download_count}")  # debugging: print download count
+
+    print("number of total downloaded photos: " + str(download_count) + " | Bounding Box: " + bounding_box + " with " + str(download_count_bounding_box) + " downloaded photos")
 
     # break the outer loop if the download limit is reached
     if download_count >= DOWNLOAD_LIMIT:
