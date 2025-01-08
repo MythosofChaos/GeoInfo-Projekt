@@ -1,5 +1,3 @@
-
-
 import flickrapi
 import json
 import requests
