@@ -10,7 +10,7 @@ import os
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 
-def find_dominant_colors(image, k=4): #k = number of clusters / colors
+def find_dominant_colors(image, k=8): #k = number of clusters / colors
     # resize image to reduce computation time
     image = cv2.resize(image, (64, 64), interpolation=cv2.INTER_AREA)
     # reshape image to a list of pixels
@@ -32,16 +32,23 @@ def get_color_description(color):
     # RGB range color descriptions
     color_descriptions = [
         {"range": ((90, 50, 40), (160, 90, 70)), "name": "Reddish-Brown"},
-        {"range": ((140, 100, 80), (200, 160, 130)), "name": "Light Brown"},
+        {"range": ((140, 100, 80), (200, 160, 150)), "name": "Light Brown"},
         {"range": ((50, 30, 20), (120, 90, 70)), "name": "Dark Brown"},
-        {"range": ((60, 60, 60), (160, 160, 160)), "name": "Gray"},
-        {"range": ((10, 10, 10), (60, 60, 60)), "name": "Black"},
+        {"range": ((60, 60, 60), (165, 165, 165)), "name": "Gray"},
+        {"range": ((0, 0, 0), (60, 60, 60)), "name": "Black"},
         {"range": ((160, 80, 50), (210, 120, 80)), "name": "Reddish-Orange"},
-        {"range": ((170, 140, 90), (220, 180, 120)), "name": "Yellowish-Brown"},
-        {"range": ((180, 180, 180), (255, 255, 255)), "name": "Light Gray"},
-        {"range": ((100, 120, 200), (255, 255, 255)), "name": "Blue"},
+        {"range": ((170, 140, 90), (250, 220, 180)), "name": "Yellowish-Brown"},
+        {"range": ((170, 170, 180), (255, 255, 255)), "name": "Light Gray"},
+        {"range": ((70, 120, 163), (200, 255, 255)), "name": "Blue"},
+        {"range": ((0, 50, 90), (70, 150, 200)), "name": "Dark Blue"},
     ]
-    # return the color description if available
+    # prioritize colors if they lie in the same interval
+    priority_order = ["Black", "Gray", "Light Gray", "Reddish-Brown", "Dark Blue", "Blue", "Light Brown", "Dark Brown", "Reddish-Orange", "Yellowish-Brown"]
+
+    # sort color descriptions by priority
+    color_descriptions.sort(key=lambda x: priority_order.index(x["name"]))
+
+    # Return the color description if available
     for desc in color_descriptions:
         lower, upper = desc["range"]
         if all(lower[i] <= color[i] <= upper[i] for i in range(3)):
@@ -52,13 +59,13 @@ def is_desert_pavement(colors, percentages):
     # RGB ranges for desert pavement definitions
     desert_ranges = [
         ((90, 50, 40), (160, 90, 70)),   # Reddish-brown
-        ((140, 100, 80), (200, 160, 130)), # Light brown
+        ((140, 100, 80), (200, 160, 150)), # Light brown
         ((50, 30, 20), (120, 90, 70)),  # Dark brown
-        ((60, 60, 60), (150, 150, 150)),  # Gray
-        ((10, 10, 10), (60, 60, 60)),  # Black
+        ((60, 60, 60), (165, 165, 165)),  # Gray
+        ((0, 0, 0), (60, 60, 60)),  # Black
         ((160, 80, 50), (210, 120, 80)),  # Reddish-Orange
-        ((170, 140, 90), (220, 180, 120)),  # Yellowish-Brown
-        ((180, 180, 180), (255, 255, 255)),  # Light Gray
+        ((170, 140, 90), (250, 220, 180)),  # Yellowish-Brown
+        ((170, 170, 180), (255, 255, 255)),  # Light Gray
         #((100, 120, 200), (255, 255, 255)),  # Sky
         #((0, 80, 0), (100, 255, 100)),       # Vegetation
         #((0, 0, 0), (50, 50, 50)),           # Shadows
@@ -68,7 +75,7 @@ def is_desert_pavement(colors, percentages):
 
     desert_percentage = 0
     for color, percentage in zip(colors, percentages):
-        # check if the color falls within any of the desert ranges
+        # check if the color falls within any of the predefined ranges
         in_range = any( # in_range = bool
             all(lower[i] <= color[i] <= upper[i] for i in range(3))
             for lower, upper in desert_ranges
@@ -76,12 +83,11 @@ def is_desert_pavement(colors, percentages):
         if in_range:
             desert_percentage += percentage
 
-    return desert_percentage > 50  # If > 70% of the image is desert pavement its considered a match
-    #TODO: find threshold for desert pavement needed in picture
+    return desert_percentage > 40  # If > 40% of the image is desert pavement its considered a match
 
 # filepath
 image_path = os.path.join(os.path.dirname(__file__), 'image.jpg')
-image = cv2.imread(image_path) # load the image
+image = cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB) # load image & swap from BGR to RGB format
 
 # Check if the image was loaded successfully
 if image is None:

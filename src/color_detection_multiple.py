@@ -3,7 +3,6 @@
 #pip install opencv-python
 #pip install scikit-learn
 #pip install matplotlib
-#TODO: TEST WITH ONLY DESERT PAVEMENT PICTURES AND ADJUST ITERATIVE
 import cv2
 import numpy as np
 import os
@@ -12,7 +11,7 @@ import shutil
 from pathlib import Path
 from sklearn.cluster import KMeans
 
-def find_dominant_colors(image, k=4): # k = number of clusters / colors
+def find_dominant_colors(image, k=8): # k = number of clusters / colors
     # resize image to reduce computation time
     image = cv2.resize(image, (64, 64), interpolation=cv2.INTER_AREA)
     # reshape image to a list of pixels
@@ -22,6 +21,9 @@ def find_dominant_colors(image, k=4): # k = number of clusters / colors
     kmeans = KMeans(n_clusters=k)
     kmeans.fit(pixels)
     colors = kmeans.cluster_centers_ # get colors as RGB values
+
+    # convert BGR to RGB
+    colors = colors[:, ::-1]
     
     # calculate percentage of each color
     labels = kmeans.labels_
@@ -34,15 +36,22 @@ def get_color_description(color):
     # RGB range color descriptions
     color_descriptions = [
         {"range": ((90, 50, 40), (160, 90, 70)), "name": "Reddish-Brown"},
-        {"range": ((140, 100, 80), (200, 160, 130)), "name": "Light Brown"},
+        {"range": ((140, 100, 80), (200, 160, 150)), "name": "Light Brown"},
         {"range": ((50, 30, 20), (120, 90, 70)), "name": "Dark Brown"},
-        {"range": ((60, 60, 60), (160, 160, 160)), "name": "Gray"},
-        {"range": ((10, 10, 10), (60, 60, 60)), "name": "Black"},
+        {"range": ((60, 60, 60), (165, 165, 165)), "name": "Gray"},
+        {"range": ((0, 0, 0), (60, 60, 60)), "name": "Black"},
         {"range": ((160, 80, 50), (210, 120, 80)), "name": "Reddish-Orange"},
-        {"range": ((170, 140, 90), (220, 180, 120)), "name": "Yellowish-Brown"},
-        {"range": ((180, 180, 180), (255, 255, 255)), "name": "Light Gray"},
-        {"range": ((100, 120, 200), (255, 255, 255)), "name": "Blue"},
+        {"range": ((170, 140, 90), (250, 220, 180)), "name": "Yellowish-Brown"},
+        {"range": ((170, 170, 180), (255, 255, 255)), "name": "Light Gray"},
+        {"range": ((70, 120, 163), (200, 255, 255)), "name": "Blue"},
+        {"range": ((0, 50, 90), (70, 150, 200)), "name": "Dark Blue"},
     ]
+    # prioritize colors if they lie in the same interval
+    priority_order = ["Black", "Gray", "Light Gray", "Reddish-Brown", "Dark Blue", "Blue", "Light Brown", "Dark Brown", "Reddish-Orange", "Yellowish-Brown"]
+
+    # sort color descriptions by priority
+    color_descriptions.sort(key=lambda x: priority_order.index(x["name"]))
+
     # return the color description if available
     for desc in color_descriptions:
         lower, upper = desc["range"]
@@ -54,13 +63,13 @@ def is_desert_pavement(colors, percentages):
     # RGB ranges for desert pavement definitions
     desert_ranges = [
         ((90, 50, 40), (160, 90, 70)),   # Reddish-brown
-        ((140, 100, 80), (200, 160, 130)), # Light brown
+        ((140, 100, 80), (200, 160, 150)), # Light brown
         ((50, 30, 20), (120, 90, 70)),  # Dark brown
-        ((60, 60, 60), (150, 150, 150)),  # Gray
-        ((10, 10, 10), (60, 60, 60)),  # Black
+        ((60, 60, 60), (165, 165, 165)),  # Gray
+        ((0, 0, 0), (60, 60, 60)),  # Black
         ((160, 80, 50), (210, 120, 80)),  # Reddish-Orange
-        ((170, 140, 90), (220, 180, 120)),  # Yellowish-Brown
-        ((180, 180, 180), (255, 255, 255)),  # Light Gray
+        ((170, 140, 90), (250, 220, 180)),  # Yellowish-Brown
+        ((170, 170, 180), (255, 255, 255)),  # Light Gray
         #((100, 120, 200), (255, 255, 255)),  # Sky
         #((0, 80, 0), (100, 255, 100)),       # Vegetation
         #((0, 0, 0), (50, 50, 50)),           # Shadows
@@ -78,7 +87,7 @@ def is_desert_pavement(colors, percentages):
         if in_range:
             desert_percentage += percentage
 
-    return desert_percentage > 70  # If > 70% of the image is desert pavement its considered a match
+    return desert_percentage > 40  #if > 40% of the image is desert pavement its considered a match
 
 # Define the input and output directories
 base_dir = Path(__file__).parent.parent
@@ -94,7 +103,7 @@ os.makedirs(output_dir_no_desert, exist_ok=True)
 for filename in os.listdir(input_dir):
     if filename.endswith('.jpg'):
         image_path = input_dir / filename
-        image = cv2.imread(str(image_path)) # load the image
+        image = cv2.cvtColor(cv2.imread(str(image_path)), cv2.COLOR_BGR2RGB) # load image & swap from BGR to RGB format
 
         # check if image was loaded successfully
         if image is None:
