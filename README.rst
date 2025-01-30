@@ -3,7 +3,7 @@
 User Documentation 
 ==================
 
-Das Projekt zielt darauf ab, die Verbreitung von Wüstenpflaster – eines weltweit auftretenden
+Das Projekt zielt darauf ab, die Verbreitung von Wüstenpflastern – eines weltweit auftretenden
 geomorphologischen Phänomens in Rahmen einer Studentischen Projekt Arbeit der Friedrich Schiller Universität Jena unter leitung von Prof. Brenning zu erfassen. 
 
 Hierfür sollen in Rahmen dieses Projekts, mithilfe eines eigens entwickelten Python-Skripts gezielt
@@ -29,4 +29,22 @@ Pilotstudie sichergestellt ist. Weiterhin wird eine Einschätzung der Machbarkei
 von Social Media als Datenquelle für umweltwissenschaftliche Forschung durch diese
 Pilotstudie geliefert.
 
-hier bitte nen guten Text hinschreiben!
+
+==================
+Installation & Nutzung
+==================
+1. Clone the GroundingDINO repository and follow the instructions in the README.md file on the main page of the repository.
+2. ...
+3. 
+
+==================
+Lizenz
+==================
+
+Dieses Projekt verwendet **GroundingDINO**, ursprünglich entwickelt von **IDEA Research**, lizenziert unter der [Apache-Lizenz, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+## Lizenz
+Der Code ist unter der Apache-Lizenz, Version 2.0, lizenziert. Sie dürfen diesen Code gemäß den Bedingungen der Lizenz verwenden, ändern und verteilen.
+
+Copyright 2023 - heute, IDEA Research.
+Lizenziert unter der Apache-Lizenz, Version 2.0.

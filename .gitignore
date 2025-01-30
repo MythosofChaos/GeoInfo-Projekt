@@ -1,4 +1,4 @@
-# Default ignored files
+### Default ignored files ###
 /shelf/
 /workspace.xml
 ### generic ignored files ###
@@ -15,7 +15,10 @@ _build
 *.csv
 *.html
 *.json
-### scraped images ###
+### scraped data ###
 /out
 /in
 *.jpg
+### ignore GroundingDINO and dataset folder ###
+GroundingDINO/
+dataset/
