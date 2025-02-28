@@ -1,50 +1,173 @@
 .. _User_Documentation:
 ==================
-User Documentation 
+User Documentation
 ==================
 
-Das Projekt zielt darauf ab, die Verbreitung von Wüstenpflastern – eines weltweit auftretenden
-geomorphologischen Phänomens in Rahmen einer Studentischen Projekt Arbeit der Friedrich Schiller Universität Jena unter leitung von Prof. Brenning zu erfassen. 
+Das Projekt zielt darauf ab, die Verbreitung von Wüstenpflastern mithilfe von Social-Media-Daten von Flickr und KI-gestützter Bildklassifikation mittels GroundingDINO zu erfassen.
 
-Hierfür sollen in Rahmen dieses Projekts, mithilfe eines eigens entwickelten Python-Skripts gezielt
-Fotos und Bildunterschriften aus Flickr-Beiträgen aus Wüstenregionen gesammelt und
-ausgewertet werden. 
-Die initiale Bildauswahl erfolgt anhand von aus globalen
-Klimaklassifikationsdatenätzen extrahierten Bounding Boxes geeigneter
-Wüstenklimagebiete, sowie grundlegender visueller Kriterien wie Farbmerkmalen, um Bilder
-zu identifizieren, die den Wüstenboden und möglicherweise Wüstenpflaster zeigen. 
+==================
+Inhaltsverzeichnis
+==================
+1. Technische Anforderungen
+2. Installationsanleitung
+3. Ordnerstruktur
+4. Skript-Dokumentation
+   - extract_coordinates.py
+   - photo_download.py
+   - color_detection_multiple.py
+   - desertpavement_prediction_multiple.py
+5. Togglebare Variablen
+6. Lizenzinformationen
 
-In späteren Phasen können erweiterte Klassifikationsmethoden zur Verfeinerung der
-Bildauswahl hinzukommen, wie zum Beispiel die Analyse struktureller bzw. Merkmale der
-Böden.
-Um die Relevanz der gescrapten Fotos zu bestimmen, werden die Daten manuell von
-Wüstenpflasterexperten validiert und in drei Kategorien eingeteilt: “unbrauchbar”,
-“brauchbar ohne Wüstenpflaster”, und “brauchbar mit Wüstenpflaster”. 
+==================
+Technische Anforderungen
+==================
+- Python 3.12.x (empfohlen 3.12.8)
+- CUDA 11.x (empfohlen 11.7)
+- PyTorch 2.5.x (empfohlen 2.5.1)
+- NVIDIA GPU mit 3GB VRAM (für GroundingDINO)
+- 10 GB freier Festplattenspeicher
+- Flickr API-Schlüssel (kostenloses Konto erforderlich)
 
-Die erwarteten Ergebnisse umfassen eine erste Erfassung potenzieller
-Wüstenpflasterstandorte, die durch „Ground-Truthing“-Techniken weiter validiert werden
-können. Das Forschungsteam verfügt über umfassende Kenntnisse in Geodatenanalyse,
-Web-Scraping und Bildverarbeitung, sodass die Umsetzung und Erweiterung dieser
-Pilotstudie sichergestellt ist. Weiterhin wird eine Einschätzung der Machbarkeit und Grenzen
-von Social Media als Datenquelle für umweltwissenschaftliche Forschung durch diese
-Pilotstudie geliefert.
+==================
+Installation
+==================
+1. Grundinstallation: 
+   
+   - Eine genauere Anleitung zur Installation von GroundingDINO finden Sie im offiziellen Repository [https://github.com/IDEA-Research/GroundingDINO]
+   - Es wird empfohlen, GroundingDINO in das Root-Verzeichnis des Projekts zu klonen.
+   
+   git clone https://github.com/IDEA-Research/GroundingDINO.git
+   cd GroundingDINO
+   pip install -r requirements.txt
+   python setup.py install
+
+2. Projektabhängigkeiten installieren:
+
+   pip install geopandas folium scikit-learn opencv-python flickrapi python-dotenv
+
+3. Umgebungsvariablen einrichten:
+   
+   Erstellen Sie `.env`-Datei mit Flickr-API-Schlüsseln:
+
+     FLICKR_API_KEY="Ihr-Schlüssel"
+     FLICKR_SECRET_KEY="Ihr-Geheimschlüssel"
 
 
 ==================
-Installation & Nutzung
+Ordnerstruktur
 ==================
-1. Clone the GroundingDINO repository and follow the instructions in the README.md file on the main page of the repository.
-2. ...
-3. 
+Projekt-Root/
+├── in/
+│   ├── 1976-2000.shp          # Klimaklassifikations-Shapefile
+│   └── FlickrAPI_keys.env     # API-Schlüssel
+├── out/
+│   ├── downloaded_photos/     # Rohbilder von Flickr
+│   ├── possible_desert_pavements/  # RGB-gefilterte Bilder
+│   └── annotated_*/           # KI-klassifizierte Ergebnisse
+├── output/                    # Generierte Bounding-Boxes
+└── GroundingDINO/             # Clone des offiziellen Repositories
+
+==================
+Skript-Dokumentation
+==================
+
+extract_coordinates.py
+----------------------
+**Funktion**: Extrahiert Bounding-Boxes aus Klimazonen-Shapefiles
+
+1. Input:
+   - Shapefile: in/1976-2000.shp
+   - Klimazonen-Codes (GRIDCODE 21=BWh, 22=BWk)
+
+2. Output:
+   - CSV: output/bounding_boxes.csv
+   - Interaktive Karte: output/bounding_boxes_map.html
+
+3. Ausführung:
+   python scripts/extract_coordinates.py
+
+
+photo_download.py
+-----------------
+**Funktion**: Lädt Bilder von Flickr herunter
+
+1. Konfiguration:
+   - Suchbegriff: "desert pavement"
+   - Max. Downloads: 68,000 (anpassbar über DOWNLOAD_LIMIT)
+   - Die Flickr API ist limitiert auf 3600 Anfragen pro Stunde
+
+2. Output:
+   - Bilder: out/downloaded_photos/*.jpg
+   - Metadaten: out/data.json
+
+3. Ausführung:
+   python scripts/photo_download.py
+
+
+color_detection_multiple.py
+---------------------------
+**Funktion**: RGB-basierte Vorauswahl
+
+1. Input:
+   - Bilder: out/downloaded_photos/
+
+2. Output:
+   - Positivfälle: out/possible_desert_pavements/
+   - Negativfälle: out/no_desert_pavement/
+
+3. Parameter:
+   - Farbtoleranz: 50% (Zeile 96: desert_percentage > 50)
+
+4. Ausführung:
+   python scripts/color_detection_multiple.py
+
+
+desertpavement_prediction_multiple.py
+-------------------------------------
+**Funktion**: KI-gestützte Objekterkennung
+
+1. Input:
+   - Bilder: out/possible_desert_pavements/
+
+2. Output:
+   - Annotierte Bilder: out/annotated_desert_pavements/
+   - Log-Daten: groundingdino_scripts/logits_phrases_all.json
+
+3. Wichtige Parameter (Zeilen 30-35):
+   TEXT_PROMPT = "road markings . desert pavement ..."  # Suchbegriffe
+   BOX_THRESHOLD = 0.35   # Minimale Box-Konfidenz
+   TEXT_THRESHOLD = 0.25  # Minimale Text-Konfidenz
+
+4. Ausführung:
+   python scripts/desertpavement_prediction_multiple.py
+
+
+==================
+Togglebare Variablen
+==================
+
+1. photo_download.py:
+   PRINT_DEBUG_INFO = True  # Zeigt Download-Fortschritt
+   PRINT_DEBUG_INFO_PHOTO_NAMES = True  # Listet Dateinamen
+
+2. desertpavement_prediction_*.py:
+   use_annotated_as_origin = True  # Zweiter Durchlauf mit annotierten Bildern
+    
+3. color_detection_*.py:
+   desert_ranges = [...]  # RGB-Werte für Wüstenpflaster
+
+4. desertpavement_prediction_multiple.py:
+   draw_boxes = True  # Toggle für Bounding-Box Annotationen (Boxen, Text, Logits)
+   
+   Wir haben die Annotation-Funktion von GroundingDINO so modifiziert, dass die Anzeige von Bounding-Boxen und Labels optional ist. Diese Änderung wurde vorgenommen, um die Flexibilität der Bildanalyse zu erhöhen und die visuelle Darstellung der Ergebnisse an unsere spezifischen Anforderungen anzupassen. Die Anpassungen sind im Code durch den Parameter draw_boxes (Standardwert: True) in der Funktion annotate() gekennzeichnet.
+   Dies ist insbesondere Hilfreich für multiple Durchläufe, damit die Bounding-Boxen nicht mitklassifizert werden.
+
+In einigen Skripts finden sich zusätzlich DEBUG-Flags zur Fehlerdiagnose.
 
 ==================
 Lizenz
 ==================
+Dieses Projekt verwendet GroundingDINO, ursprünglich entwickelt von IDEA Research, lizenziert unter der Apache-Lizenz, Version 2.0. Eigenentwickelte Skripte stehen unter MIT-Lizenz. Beachten Sie die Flickr-Nutzungsbedingungen für heruntergeladene Bilder.
 
-Dieses Projekt verwendet **GroundingDINO**, ursprünglich entwickelt von **IDEA Research**, lizenziert unter der [Apache-Lizenz, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
-
-## Lizenz
-Der Code ist unter der Apache-Lizenz, Version 2.0, lizenziert. Sie dürfen diesen Code gemäß den Bedingungen der Lizenz verwenden, ändern und verteilen.
-
-Copyright 2023 - heute, IDEA Research.
-Lizenziert unter der Apache-Lizenz, Version 2.0.
+Copyright 2024 - Projektteam Geoinformatik, FSU Jena
