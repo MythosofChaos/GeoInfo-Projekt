@@ -34,14 +34,17 @@ Installation
 ==================
 1. Grundinstallation: 
    
-   - Eine genauere Anleitung zur Installation von GroundingDINO finden Sie im offiziellen Repository [https://github.com/IDEA-Research/GroundingDINO]
+   - Eine genauere Anleitung zur Installation von GroundingDINO finden Sie im `offiziellen Repository`_
    - Es wird empfohlen, GroundingDINO in das Root-Verzeichnis des Projekts zu klonen.
    
-   git clone https://github.com/IDEA-Research/GroundingDINO.git
-   cd GroundingDINO
-   pip install -r requirements.txt
-   python setup.py install
-
+.. code-block:: bash
+        
+        git clone https://github.com/IDEA-Research/GroundingDINO.git
+        cd GroundingDINO
+        pip install -r requirements.txt
+        python setup.py install
+   
+   
 2. Projektabhängigkeiten installieren:
 
    pip install geopandas folium scikit-learn opencv-python flickrapi python-dotenv
@@ -50,22 +53,34 @@ Installation
    
    Erstellen Sie `.env`-Datei mit Flickr-API-Schlüsseln:
 
-     FLICKR_API_KEY="Ihr-Schlüssel"
-     FLICKR_SECRET_KEY="Ihr-Geheimschlüssel"
+.. code-block:: bash
+        
+        FLICKR_API_KEY="Ihr-Schlüssel"
+        FLICKR_SECRET_KEY="Ihr-Geheimschlüssel"
+     
 
-
+.. _offiziellen Repository: https://github.com/IDEA-Research/GroundingDINO
 ==================
 Ordnerstruktur
 ==================
 Projekt-Root/
+
 ├── in/
+
 │   ├── 1976-2000.shp          # Klimaklassifikations-Shapefile
+
 │   └── FlickrAPI_keys.env     # API-Schlüssel
+
 ├── out/
+
 │   ├── downloaded_photos/     # Rohbilder von Flickr
+
 │   ├── possible_desert_pavements/  # RGB-gefilterte Bilder
+
 │   └── annotated_*/           # KI-klassifizierte Ergebnisse
+
 ├── output/                    # Generierte Bounding-Boxes
+
 └── GroundingDINO/             # Clone des offiziellen Repositories
 
 ==================
@@ -85,7 +100,7 @@ extract_coordinates.py
    - Interaktive Karte: output/bounding_boxes_map.html
 
 3. Ausführung:
-   python scripts/extract_coordinates.py
+   :code:`python scripts/extract_coordinates.py`
 
 
 photo_download.py
@@ -102,7 +117,7 @@ photo_download.py
    - Metadaten: out/data.json
 
 3. Ausführung:
-   python scripts/photo_download.py
+   :code:`python scripts/photo_download.py`
 
 
 color_detection_multiple.py
@@ -120,7 +135,7 @@ color_detection_multiple.py
    - Farbtoleranz: 50% (Zeile 96: desert_percentage > 50)
 
 4. Ausführung:
-   python scripts/color_detection_multiple.py
+   :code:`python scripts/color_detection_multiple.py`
 
 
 desertpavement_prediction_multiple.py
@@ -140,7 +155,7 @@ desertpavement_prediction_multiple.py
    TEXT_THRESHOLD = 0.25  # Minimale Text-Konfidenz
 
 4. Ausführung:
-   python scripts/desertpavement_prediction_multiple.py
+   :code:`python scripts/desertpavement_prediction_multiple.py`
 
 
 ==================
@@ -148,22 +163,30 @@ Togglebare Variablen
 ==================
 
 1. photo_download.py:
+
+.. code-block:: bash
    PRINT_DEBUG_INFO = True  # Zeigt Download-Fortschritt
    PRINT_DEBUG_INFO_PHOTO_NAMES = True  # Listet Dateinamen
 
 2. desertpavement_prediction_*.py:
+   
+.. code-block:: bash
    use_annotated_as_origin = True  # Zweiter Durchlauf mit annotierten Bildern
     
 3. color_detection_*.py:
+   
+.. code-block:: bash
    desert_ranges = [...]  # RGB-Werte für Wüstenpflaster
 
 4. desertpavement_prediction_multiple.py:
+   
+.. code-block:: bash
    draw_boxes = True  # Toggle für Bounding-Box Annotationen (Boxen, Text, Logits)
    
    Wir haben die Annotation-Funktion von GroundingDINO so modifiziert, dass die Anzeige von Bounding-Boxen und Labels optional ist. Diese Änderung wurde vorgenommen, um die Flexibilität der Bildanalyse zu erhöhen und die visuelle Darstellung der Ergebnisse an unsere spezifischen Anforderungen anzupassen. Die Anpassungen sind im Code durch den Parameter draw_boxes (Standardwert: True) in der Funktion annotate() gekennzeichnet.
    Dies ist insbesondere Hilfreich für multiple Durchläufe, damit die Bounding-Boxen nicht mitklassifizert werden.
 
-In einigen Skripts finden sich zusätzlich DEBUG-Flags zur Fehlerdiagnose.
+In einigen Skripts finden sich zusätzlich :code:`DEBUG`-Flags zur Fehlerdiagnose.
 
 ==================
 Lizenz
